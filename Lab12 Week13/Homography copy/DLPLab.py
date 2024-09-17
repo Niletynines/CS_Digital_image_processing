@@ -2,7 +2,7 @@ from PIL import Image
 import numpy as np
 from ImageManager import ImageManager
 
-img = Image.open("images/qrcode.bmp")
+img = Image.open("Lab12 Week13/images/qrcode.bmp")
 data = np.array(img)
 
 # shape array
@@ -15,7 +15,7 @@ bitDepth = mode_to_bpp[img.mode]
 print("Image %s with %s x %s pixels (%s bits per pixel) has been read!" % (img, width, height, bitDepth))
 
 im = ImageManager()
-im.read("images/qrcode.bmp")
+im.read("Lab12 Week13/images/qrcode.bmp")
 
 # Define source and destination points
 srcPoints = np.array([
@@ -33,7 +33,7 @@ dstPoints = np.array([
 
 H = im.calculateHomography(srcPoints, dstPoints)
 im.applyHomography(H)
-im.write("images/qrcode2.bmp")
+im.write("Lab12 Week13/images/Homography.bmp")
 
 #  0 -1  2 
 # -3  4 -5
