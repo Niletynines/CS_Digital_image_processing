@@ -3,7 +3,7 @@ import numpy as np
 from ImageManager import ImageManager
 from ImageManager import StructuringElement
 
-img = Image.open("image/mandrilB.bmp")
+img = Image.open("image\mandrilB.bmp")
 data = np.array(img)
 
 # shape array
@@ -16,15 +16,10 @@ bitDepth = mode_to_bpp[img.mode]
 print("Image %s with %s x %s pixels (%s bits per pixel) has been read!" % (img, width, height, bitDepth))
 
 im = ImageManager()
-im.read("image/mandrilB.bmp")
+im.read("image\mandrilB.bmp")
 
 se = StructuringElement(3, 3, complex(1, 1))
 se.elements[True] = 255
 
-# im.erosion(se)
-# im.write("image/erosion.bmp")
-
-# im.dilation(se)
-# im.write("image/dilation.bmp")
-
 im.boundaryExtraction(se)
+im.write("image\BoundaryExtraction.bmp")

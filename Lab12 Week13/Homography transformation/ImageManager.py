@@ -41,12 +41,19 @@ class ImageManager:
             print("Image %s has been written!" % (fileName))
     
     def calculateHomography(self, srcPoints, dstPoints):
+        # Rotate dstPoints 90 degrees 
+        tempDst = np.copy(dstPoints)
+        dstPoints[0, :] = tempDst[3, :]
+        dstPoints[1, :] = tempDst[0, :]
+        dstPoints[2, :] = tempDst[1, :]
+        dstPoints[3, :] = tempDst[2, :]
+
         A = np.zeros((8, 8))
         b = np.zeros(8)
         for i in range(4):
             xSrc, ySrc = srcPoints[i]
             xDst, yDst = dstPoints[i]
-            A[2 * i] = [xSrc, ySrc, 1, 0, 0, 0, -xSrc * xDst, -ySrc * xDst]
+            A[2 * i ] = [xSrc, ySrc, 1, 0, 0, 0, -xSrc * xDst, -ySrc * xDst]
             A[2 * i + 1] = [0, 0, 0, xSrc, ySrc, 1, -xSrc * yDst, -ySrc * yDst]
             
             b[2 * i] = xDst
@@ -54,7 +61,13 @@ class ImageManager:
         # Solve using Gaussian elimination
         # This function will solve the system A * x = b
         # You can use Gaussian elimination, LU decomposition, or any other method
+        # homography = np.linalg.lstsq(A, b, rcond=None)[0]
+        # homography = np.append(homography, 1)  # last element h33 is 1
+        # return homography
+    
         return self.gaussianElimination(A, b)
+
+        
     
     def gaussianElimination(self, A, b):
         n = len(b)
@@ -78,29 +91,82 @@ class ImageManager:
         homography[8] = 1
         
         return homography
+        
     
     def invertHomography(self, H):
         # Calculate the determinant of the 3x3 matrix
+
+        # H = H.reshape(3,3)
+
         det = (H[0] * (H[4] * H[8] - H[5] * H[7])
-        - H[1] * (H[3] * H[8] - H[5] * H[6])
-        + H[2] * (H[3] * H[7] - H[4] * H[6]))
+        - H[1] * (H[3] * H[8] - H[6] * H[5])
+        + H[2] * (H[3] * H[7] - H[6] * H[4]))
         if det == 0:
             raise ValueError("Matrix is not invertible")
         invDet = 1.0 / det
         
-        # Calculate the inverse using the cofactor matrix
+        # Calculate Minor
+        
+        Minor = np.zeros(9)
+        Minor[0] = (H[4]*H[8])-(H[7]*H[5])
+        Minor[1] = (H[3]*H[8])-(H[6]*H[5])
+        Minor[2] = (H[3]*H[7])-(H[6]*H[4])
+        Minor[3] = (H[1]*H[8])-(H[7]*H[2])
+        Minor[4] = (H[0]*H[8])-(H[6]*H[2])
+        Minor[5] = (H[0]*H[8])-(H[6]*H[1])
+        Minor[6] = (H[1]*H[5])-(H[4]*H[2])
+        Minor[7] = (H[0]*H[5])-(H[6]*H[2])
+        Minor[8] = (H[0]*H[4])-(H[3]*H[1])
+        
+        #Find Cofactor
+        
+        Cof = np.zeros(9)
+        for i in range(9) :
+            if i%2==0 :
+                Cof[i] = Minor[i]
+            else :
+                Cof[i] = -1*Minor[i]
+                
+        #Find Adjoint
+        
+        Adj = np.zeros(9)
+        for i in range(9):
+            Adj[i] = Cof[i]
+        
+        Adj[1] = Cof[3]
+        Adj[2] = Cof[6]
+        Adj[3] = Cof[1]
+        Adj[5] = Cof[7]
+        Adj[6] = Cof[2]
+        Adj[7] = Cof[5]
+        
+        # # Calculate the inverse using the cofactor matrix
         invH = np.zeros(9)
-        invH[0] = invDet * (H[4] * H[8] - H[5] * H[7])
-        invH[1] = invDet * (H[2] * H[7] - H[1] * H[8])
-        invH[2] = invDet * (H[1] * H[5] - H[2] * H[4])
-        invH[3] = invDet * (H[5] * H[6] - H[3] * H[8])
-        invH[4] = invDet * (H[0] * H[8] - H[2] * H[6])
-        invH[5] = invDet * (H[2] * H[3] - H[0] * H[5])
-        invH[6] = invDet * (H[3] * H[7] - H[4] * H[6])
-        invH[7] = invDet * (H[1] * H[6] - H[0] * H[7])
-        invH[8] = invDet * (H[0] * H[4] - H[1] * H[3])
+        invH[0] = invDet * (H[4] * H[8] - H[5] * H[7]) #11
+        invH[1] = invDet * (H[2] * H[7] - H[1] * H[8]) #21
+        invH[2] = invDet * (H[1] * H[5] - H[2] * H[4]) #31
+        invH[3] = invDet * (H[5] * H[6] - H[3] * H[8]) #21
+        invH[4] = invDet * (H[0] * H[8] - H[2] * H[6]) #22
+        invH[5] = invDet * (H[2] * H[3] - H[0] * H[5]) #23
+        invH[6] = invDet * (H[3] * H[7] - H[4] * H[6]) #31
+        invH[7] = invDet * (H[1] * H[6] - H[0] * H[7]) #32
+        invH[8] = invDet * (H[0] * H[4] - H[1] * H[3]) #33
+        
+        # # for i in range(9):
+        # #     invH[i] = invDet * Adj[i] 
+        
+        # # invH[0] = invDet * Adj[0] #11
+        # # invH[1] = invDet * Adj[1] #21
+        # # invH[2] = invDet * Adj[2]#31
+        # # invH[3] = invDet * Adj[3] #21
+        # # invH[4] = invDet * Adj[4] #22
+        # # invH[5] = invDet * Adj[5] #23
+        # # invH[6] = invDet * Adj[6] #31
+        # # invH[7] = invDet * Adj[7] #32
+        # # invH[8] = invDet * Adj[8] #33
         
         return invH
+        # return np.linalg.inv(H).flatten()
     
     def applyHomographyToPoint(self, H, x, y):
         # Homogeneous coordinates calculation after transformation

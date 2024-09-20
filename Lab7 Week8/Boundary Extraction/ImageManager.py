@@ -96,7 +96,6 @@ class ImageManager:
         
         global data
         
-        
         # self.convertToGrayscale()
         data_zeropaded = np.zeros([width + se.width * 2, height + se.height * 2, 3])
         data_zeropaded[se.width - 1:width + se.width - 1, se.height - 1:height + se.height - 1, :] = data
@@ -130,21 +129,36 @@ class ImageManager:
     def boundaryExtraction(self, se):
 
         global data
-
-        erodedBuf = np.zeros(width * height)
-            
+        global width
+        global height
+       
+        erodedBuf = np.copy(data)
+        
         self.erosion(se)
-            
-        # copy eroded image
-        for y in range(height) :
-            for x in range(width) :
-                
-                r = data[x, y, 0]
-                g = data[x, y, 1]
-                b = data[x, y, 2]
-                erodedBuf[y * width + x] = r, g, b
-                        
-    
+        
+        erodedColor = np.copy(data)
+        
+        self.restoreToOriginal()
+        
+        ogColor = np.copy(data)
+        
+        # คำนวณ boundary โดยการลบภาพ erosion ออกจากภาพเดิม
+        boundary = np.clip(ogColor - erodedColor, 0, 255)
+
+        boundaryRGB = np.zeros_like(boundary, dtype=np.uint8)
+        boundaryRGB[:, :, 0] = boundary[:, :, 0]  # Red
+        boundaryRGB[:, :, 1] = boundary[:, :, 1]  # Green
+        boundaryRGB[:, :, 2] = boundary[:, :, 2]  # Blue
+
+        data[:, :, :] = boundaryRGB[:, :, :]
+
+        del erodedBuf
+
+
+    # copy
+    def restoreToOriginal(self):
+        global data
+        data = np.copy(original)
     
     
 class StructuringElement:
@@ -161,7 +175,7 @@ class StructuringElement:
         self.height = height    
         self.origin = origin
         
-        print("%s %s %s" % (self.width, self.height, self.origin))
+        # print("%s %s %s" % (self.width, self.height, self.origin))
         
         if (origin.real < 0 or origin.real >= width or origin.imag < 0 or origin.imag >= height):
             self.origin = complex(0, 0)
@@ -172,6 +186,5 @@ class StructuringElement:
         self.elements = np.zeros([width, height])
         self.ignoreElements = []
         
-        print("%s %s %s %s" % (self.width, self.height, self.origin, self.elements))
+        # print("%s %s %s %s" % (self.width, self.height, self.origin, self.elements))
         
-   
