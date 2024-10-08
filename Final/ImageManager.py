@@ -297,31 +297,140 @@ class ImageManager:
         self.thresholding(round(max))
 
     # หา Bounding Box ของตัวเลขในภาพ
+    # def find_bounding_boxes(self):
+    #     global data
+    #     # x, y = data.shape
+    #     bounding_boxes = []
+    #     in_character = False
+    #     start_col = 0
+        
+    #     for y in range(height):
+    #         for x in range(width):
+    #             if np.any(data[:, y] == 255):
+    #                 if not in_character:
+    #                     start_col = y
+    #                     in_character = True
+    #             else:
+    #                 if in_character:
+    #                     bounding_boxes.append((start_col, y))
+    #                     in_character = False
+        
+    #     # แสดงข้อมูล bounding boxes ที่พบ
+    #     for i, (start, end) in enumerate(bounding_boxes):
+    #         print("Bounding Box {%s}: Start = {%s}, End = {%s}" % (i+1, start, end))
+
+    #     return bounding_boxes
+
     def find_bounding_boxes(self):
         global data
-        # x, y = data.shape
+        # width = data.shape[0]  # กำหนดขนาดของภาพจาก data
         bounding_boxes = []
         in_character = False
         start_col = 0
-        
-        for y in range(height):
-            for x in range(width):
-                if np.any(data[x, y] == 255):
-                    if not in_character:
-                        start_col = y
-                        in_character = True
-                else:
-                    if in_character:
-                        bounding_boxes.append((start_col, y))
-                        in_character = False
-        
+
+        # วนลูปเพื่อเช็คทีละคอลัมน์ (แนวตั้ง)
+        for y in range(width):
+            # เช็คว่ามีตัวอักษรในคอลัมน์นี้หรือไม่ (มีพิกเซลสีขาว)
+            if np.any(data[:, y] == 0):
+                if not in_character:
+                    start_col = y  # เริ่มตัวอักษร
+                    in_character = True
+            else:
+                if in_character:
+                    # สิ้นสุดตัวอักษรแล้ว (เจอช่องว่าง)
+                    bounding_boxes.append((start_col, y))
+                    in_character = False
+
+        # ในกรณีที่ตัวอักษรอยู่ถึงคอลัมน์สุดท้าย
+        if in_character:
+            bounding_boxes.append((start_col, width))
+
         # แสดงข้อมูล bounding boxes ที่พบ
         for i, (start, end) in enumerate(bounding_boxes):
-            print("Bounding Box {%s}: Start = {%s}, End = {%s}" % (i+1, start, end))
+            print(f"Bounding Box {i+1}: Start = {start}, End = {end}")
 
         return bounding_boxes
+    
+    def compare_characters(self, cropped_image_array, micr_array):
 
+        # ตรวจสอบว่าภาพที่ตัดมี 3 ช่องสี (RGB) หรือไม่
+        if len(cropped_image_array.shape) == 3 and cropped_image_array.shape[2] == 3:
+        
+            # แปลงภาพ RGB เป็น grayscale
+            cropped_image_array = np.mean(cropped_image_array, axis=2)
+    
+        # แปลงภาพ grayscale เป็นไบนารี (0, 255)
+        cropped_image_array = np.where(cropped_image_array > 128, 255, 0).astype(np.uint8)
+        
+        return np.sum(cropped_image_array == micr_array)
 
+    # ฟังก์ชันจับคู่ bounding boxes กับตัวอักษร MICR
+    # def match_micr_characters(self, bounding_boxes):
+
+    #     global data
+    #     # global micr_characters
+
+    #     matched_characters = []
+    #     for start_col, end_col in bounding_boxes:
+
+    #         # ตัดภาพย่อยจาก bounding box
+    #         cropped_image = data[:, start_col:end_col]
+            
+    #         # ปรับขนาดภาพย่อยให้ตรงกับขนาด 9x7 ของ MICR
+    #         resized_image = Image.fromarray(cropped_image).resize((7, 9), Image.NEAREST)
+    #         cropped_image_array = np.array(resized_image)
+            
+    #         # แปลงให้เป็นภาพไบนารี (0, 255)
+    #         cropped_image_array = np.where(cropped_image_array > 128, 255, 0).astype(np.uint8)
+            
+    #         # เปรียบเทียบกับตัวอักษร MICR ทั้งหมดและค้นหาตัวที่ตรงที่สุด
+    #         best_match = None
+    #         best_score = 0
+    #         for char, micr_array in self.micr_characters.items():
+    #             score = self.compare_characters(cropped_image_array, micr_array)
+    #             if score > best_score:
+    #                 best_score = score
+    #                 best_match = char
+            
+    #         matched_characters.append(best_match)
+
+    #         # พิมพ์ตัวอักษรที่ตรงกันสำหรับแต่ละ bounding box
+    #         print(f"Matched Character for bounding box ({start_col}, {end_col}): {best_match}")
+
+    #     return matched_characters
+
+    def match_micr_characters(self, bounding_boxes):
+        global data
+        matched_characters = []
+
+        for start_col, end_col in bounding_boxes:
+            # ตัดภาพย่อยจาก bounding box
+            cropped_image = data[:, start_col:end_col]
+            
+            # ปรับขนาดภาพย่อยให้ตรงกับขนาด 9x7 ของ MICR
+            resized_image = Image.fromarray(cropped_image).resize((7, 9), Image.NEAREST)
+            cropped_image_array = np.array(resized_image)
+            
+            # แปลงให้เป็นภาพไบนารี (0, 255)
+            cropped_image_array = np.where(cropped_image_array > 128, 255, 0).astype(np.uint8)
+            
+            # เปรียบเทียบกับตัวอักษร MICR ทั้งหมดและค้นหาตัวที่ตรงที่สุด
+            best_match = None
+            best_score = 0
+            for char, micr_array in self.micr_characters.items():
+                score = self.compare_characters(cropped_image_array, micr_array)
+                if score > best_score:
+                    best_score = score
+                    best_match = char
+            
+            matched_characters.append(best_match)
+            # พิมพ์ตัวอักษรที่ตรงกันสำหรับแต่ละ bounding box
+            print(f"Matched Character for bounding box ({start_col}, {end_col}): {best_match}")
+        
+        # คืนค่ารายการตัวอักษรที่ตรงกัน
+        return matched_characters
+    
+    
     # สร้างตัวเลขและตัวอักษร MICR ในขนาด 9x7
     micr_characters = {
         '0': np.array([

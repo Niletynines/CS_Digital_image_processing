@@ -33,19 +33,22 @@ dstPoints = np.array([
 
 H = im.calculateHomography(srcPoints, dstPoints)
 im.applyHomography(H)
-im.write("Final\image\FinalHomo.bmp")
+# im.write("Final\image\FinalHomo.bmp")
 
 # im.convertToGrayscale()
 # im.write("Final\image\Finalgray.bmp")
 
 im.medianFilter(7)
-im.write("Final\image\FinalDenoise.bmp")
+# im.write("Final\image\FinalDenoise.bmp")
 
 TempImg = im.otsuThreshold()
-im.write("Final\image\FinalBinary.bmp")
+# im.write("Final\image\FinalBinary.bmp")
 
-im.find_bounding_boxes()
+bounding_boxes = im.find_bounding_boxes()
 
+# im.match_micr_characters(bounding_boxes)
+
+print(f"Matched MICR characters: {im.match_micr_characters(bounding_boxes)}")
 # # Find digit 5
 
 # srcPoints = np.array([
