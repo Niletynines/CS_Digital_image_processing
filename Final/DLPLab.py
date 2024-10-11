@@ -33,16 +33,16 @@ dstPoints = np.array([
 
 H = im.calculateHomography(srcPoints, dstPoints)
 im.applyHomography(H)
-# im.write("Final\image\FinalHomo.bmp")
+im.write("Final\image\FinalHomo.bmp")
 
 # im.convertToGrayscale()
-# im.write("Final\image\Finalgray.bmp")
+im.write("Final\image\Finalgray.bmp")
 
 im.medianFilter(7)
-# im.write("Final\image\FinalDenoise.bmp")
+im.write("Final\image\FinalDenoise.bmp")
 
 TempImg = im.otsuThreshold()
-# im.write("Final\image\FinalBinary.bmp")
+im.write("Final\image\FinalBinary2.bmp")
 
 # CropImg = im.crop_image_array(142,558,248,140)
 CropImg = im.crop_image_array(256,379,145,694)
