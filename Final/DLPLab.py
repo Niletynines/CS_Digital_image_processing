@@ -33,58 +33,20 @@ dstPoints = np.array([
 
 H = im.calculateHomography(srcPoints, dstPoints)
 im.applyHomography(H)
-im.write("Final\image\FinalHomo.bmp")
+# im.write("Final\image\FinalHomo.bmp")
 
-# im.convertToGrayscale()
-im.write("Final\image\Finalgray.bmp")
+im.convertToGrayscale()
+# im.write("Final\image\Finalgray.bmp")
 
 im.medianFilter(7)
-im.write("Final\image\FinalDenoise.bmp")
+# im.write("Final\image\FinalDenoise.bmp")
 
 TempImg = im.otsuThreshold()
-im.write("Final\image\FinalBinary2.bmp")
+# im.write("Final\image\FinalBinary2.bmp")
 
-# CropImg = im.crop_image_array(142,558,248,140)
-CropImg = im.crop_image_array(256,379,145,694)
-# im.crop_image_array(0,600,0,800)
+CropImg = im.crop_image_array(273,365,169,668)
 # im.write("Final\image\FinalCrop.bmp")
 
-bounding_boxes = im.find_bounding_boxes(CropImg, 549)
-
-# im.match_micr_characters(CropImg, bounding_boxes)
+bounding_boxes = im.find_bounding_boxes(CropImg, 499)
 
 print(f"Matched MICR characters: {im.match_micr_characters(CropImg, bounding_boxes)}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # Find digit 5
-
-# srcPoints = np.array([
-#     [619, 274], # top-left
-#     [664, 274], # top-right
-#     [664, 358], # bottom-right
-#     [619, 358] # bottom-left
-# ])
-# dstPoints = np.array([
-#     [0, 0], # top-left
-#     [0, 45], # top-right
-#     [84, 45], # bottom-right
-#     [84, 0] # bottom-left
-# ])
-
-# H = im.calculateHomography(srcPoints,dstPoints)
-# im.applyHomography(H)
-# im.write("Final\image\Digit5.bmp")
